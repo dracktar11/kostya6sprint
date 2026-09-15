@@ -11,17 +11,14 @@ import (
 )
 
 func IndexHandler(w http.ResponseWriter, r *http.Request) {
-	// Получаем текущую рабочую директорию
 	wd, err := os.Getwd()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	// Строим путь к index.html
 	filePath := filepath.Join(wd, "index.html")
 
-	// Читаем файл
 	data, err := os.ReadFile(filePath)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -40,7 +37,7 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	file, header, err := r.FormFile("file")
+	file, header, err := r.FormFile("myFile")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
