@@ -10,28 +10,36 @@ import (
 	"github.com/Yandex-Practicum/go1fl-sprint6-final/internal/service"
 )
 
-// IndexHandler возвращает HTML из файла index.html
 func IndexHandler(w http.ResponseWriter, r *http.Request) {
-	data, err := os.ReadFile("index.html")
+	// Получаем текущую рабочую директорию
+	wd, err := os.Getwd()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	// Строим путь к index.html
+	filePath := filepath.Join(wd, "index.html")
+
+	// Читаем файл
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
 	w.Write(data)
 }
 
-// UploadHandler обрабатывает загрузку файла из формы
 func UploadHandler(w http.ResponseWriter, r *http.Request) {
-	// 1. Парсим форму
 	err := r.ParseMultipartForm(10 << 20)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	// 2. Получаем файл
 	file, header, err := r.FormFile("file")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -39,24 +47,20 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer file.Close()
 
-	// 3. Читаем содержимое
 	data, err := io.ReadAll(file)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	// 4. Конвертируем
 	result, err := service.Convert(string(data))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	// 5. Создаём имя файла
 	fileName := time.Now().UTC().String() + filepath.Ext(header.Filename)
 
-	// 6. Создаём файл
 	outFile, err := os.Create(fileName)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -64,14 +68,12 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer outFile.Close()
 
-	// 7. Записываем результат
 	_, err = outFile.WriteString(result)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	// 8. Отправляем результат
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(result))
